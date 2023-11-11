@@ -127,16 +127,13 @@ jobs:
            echo "HAVE_SOURCE_BOOT_IMAGE=true" >> $GITHUB_ENV
            fi
         
-    - name: 下载内核源码，（深度为2，见 https://www.cnblogs.com/ink19/p/build_k20pro_kernel.html）
+    - name: 下载内核源码以及子模块，（见 https://www.cnblogs.com/ink19/p/build_k20pro_kernel.html）
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         git clone ${{ env.KERNEL_SOURCE }} -b ${{ env.KERNEL_SOURCE_BRANCH }} android-kernel --depth=2
-        
-    - name: 下载内核子模块（exfat模块，注意${{ env.KERNEL_SOURCE }}不应有.git）
-      run: |
-        cd $GITHUB_WORKSPACE/kernel_workspace/$(basename ${{ env.KERNEL_SOURCE }})
+        cd $(basename ${{ env.KERNEL_SOURCE }})
         git submodule update --init
-        
+                
     - name: 开启KVM配置
       if: env.ENABLE_KVM == 'true'
       run: |
