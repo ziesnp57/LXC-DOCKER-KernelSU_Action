@@ -131,7 +131,7 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         git clone ${{ env.KERNEL_SOURCE }} -b ${{ env.KERNEL_SOURCE_BRANCH }} android-kernel --depth=2
-        cd $(basename ${{ env.KERNEL_SOURCE }})
+        cd android-kernel
         git submodule update --init
                 
     - name: 开启KVM配置
