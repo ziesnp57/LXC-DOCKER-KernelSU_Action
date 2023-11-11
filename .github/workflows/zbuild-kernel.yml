@@ -1,4 +1,4 @@
-name: 编译 ksu docker lxc 内核
+name: 编译 android_kernel_xiaomi_sm8150 ksu docker lxc 内核
 on:
   watch:
     types: [started]
