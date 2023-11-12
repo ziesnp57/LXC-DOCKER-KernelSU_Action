@@ -20,6 +20,7 @@ jobs:
       run: |
         echo "LXC_DOCKER=$(cat config.env | grep -w "LXC_DOCKER" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "METHOD_OK=$(cat config.env | grep -w "METHOD_OK" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
+        echo "BUILD_SUBMODULE=$(cat config.env | grep -w "BUILD_SUBMODULE" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "ENABLE_KVM=$(cat config.env | grep -w "ENABLE_KVM" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "LXC_PATCH=$(cat config.env | grep -w "LXC_PATCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "ANDROID_PARANOID_NETWORK_OFF=$(cat config.env | grep -w "ANDROID_PARANOID_NETWORK_OFF" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
@@ -127,11 +128,16 @@ jobs:
            echo "HAVE_SOURCE_BOOT_IMAGE=true" >> $GITHUB_ENV
            fi
         
-    - name: 下载内核源码以及子模块，（见 https://www.cnblogs.com/ink19/p/build_k20pro_kernel.html）
+    - name: 下载内核源码（关于深度问题，见 https://www.cnblogs.com/ink19/p/build_k20pro_kernel.html）
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         git clone ${{ env.KERNEL_SOURCE }} -b ${{ env.KERNEL_SOURCE_BRANCH }} android-kernel --depth=2
-        cd android-kernel
+
+
+    - name: 初始化内核子模块
+      if: env.BUILD_SUBMODULE == 'true'
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         git submodule update --init
                 
     - name: 开启KVM配置
