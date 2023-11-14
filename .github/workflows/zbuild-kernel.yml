@@ -19,6 +19,7 @@ jobs:
     - name: 工作配置
       run: |
         echo "LXC_DOCKER=$(cat config.env | grep -w "LXC_DOCKER" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
+        echo "ENABLE_NETHUNTER=$(cat config.env | grep -w "ENABLE_KERNELSU" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "METHOD_OK=$(cat config.env | grep -w "METHOD_OK" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "ENABLE_KVM=$(cat config.env | grep -w "ENABLE_KVM" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "LXC_PATCH=$(cat config.env | grep -w "LXC_PATCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
@@ -197,6 +198,23 @@ jobs:
             sh ../custom.sh android-kernel/arch/arm64/configs/${{ env.KERNEL_CONFIG }}
 
 
+    - name: Setup Kali-Nethunter  
+      if: env.ENABLE_NETHUNTER == 'true'
+      run: |
+              cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+              git clone https://github.com/tomxi1997/kali-nethunter_patches.git
+              patch -p1 < kali-nethunter_patches/add-rtl88xxau-5.6.4.2-drivers.patch
+              patch -p1 < kali-nethunter_patches/add-wifi-injection-4.14.patch
+              #patch -p1 < kali-nethunter_patches/add-wifi-injection.patch
+              patch -p1 < kali-nethunter_patches/fix-ath9k-naming-conflict.patch
+              sleep 8
+              git clone https://github.com/Biohazardousrom/Kali-defconfig-checker.git kali
+              cd kali
+              chmod +x *.sh
+              chmod +x check-kernel-config
+              ./check-kernel-config $GITHUB_WORKSPACE/kernel_workspace/android-kernel/arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} -w
+
+
     - name: 开启KSU
       if: env.ENABLE_KERNELSU == 'true'
       run: |
@@ -260,9 +278,21 @@ jobs:
             fi
         fi
         
-        
+    - name: 制作Anykernel3卡刷包
+      if: env.CHECK_FILE_IS_OK == 'true'
+      run: |
+          cd $GITHUB_WORKSPACE/kernel_workspace
+          git clone https://github.com/osm0sis/AnyKernel3
+          sed -i 's/do.devicecheck=1/do.devicecheck=0/g' AnyKernel3/anykernel.sh
+          sed -i 's!block=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot;!block=auto;!g' AnyKernel3/anykernel.sh
+          sed -i 's/is_slot_device=0;/is_slot_device=auto;/g' AnyKernel3/anykernel.sh
+          cp android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_IMAGE_NAME }} AnyKernel3/
+          if [ ${{ env.CHECK_DTBO_IS_OK }} = true ]; then
+              cp android-kernel/out/arch/${{ env.ARCH }}/boot/dtbo.img AnyKernel3/
+          fi
+          rm -rf AnyKernel3/.git* AnyKernel3/README.md
   
-        
+          
     - name: 检查编译内核生成文件
       run: |
        cd $GITHUB_WORKSPACE/kernel_workspace
@@ -280,22 +310,8 @@ jobs:
                exit 1
            fi
        fi
-       android-kernel/scripts/extract-ikconfig android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_IMAGE_NAME }}
+       android-kernel/scripts/extract-ikconfig android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_IMAGE_NAME }} | tee AnyKernel3/.config
   
-    - name: 制作Anykernel3卡刷包
-      if: env.CHECK_FILE_IS_OK == 'true'
-      run: |
-        cd $GITHUB_WORKSPACE/kernel_workspace
-        git clone https://github.com/osm0sis/AnyKernel3
-        sed -i 's/do.devicecheck=1/do.devicecheck=0/g' AnyKernel3/anykernel.sh
-        sed -i 's!block=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot;!block=auto;!g' AnyKernel3/anykernel.sh
-        sed -i 's/is_slot_device=0;/is_slot_device=auto;/g' AnyKernel3/anykernel.sh
-        cp android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_IMAGE_NAME }} AnyKernel3/
-        if [ ${{ env.CHECK_DTBO_IS_OK }} = true ]; then
-            cp android-kernel/out/arch/${{ env.ARCH }}/boot/dtbo.img AnyKernel3/
-        fi
-        rm -rf AnyKernel3/.git* AnyKernel3/README.md
-
     - name: 制作合成新的内核镜像
       if: env.HAVE_SOURCE_BOOT_IMAGE == 'true' && env.CHECK_FILE_IS_OK == 'true'
       run: |
