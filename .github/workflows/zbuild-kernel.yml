@@ -259,6 +259,10 @@ jobs:
                exit 1
            fi
        fi
+       wget https://github.com/moby/moby/raw/master/contrib/check-config.sh
+       sh check-config.sh android-kernel/out/.config
+       android-kernel/scripts/extract-ikconfig android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_IMAGE_NAME }} > build.config
+       sh check-config.sh build.config
   
     - name: 制作Anykernel3卡刷包
       if: env.CHECK_FILE_IS_OK == 'true'
