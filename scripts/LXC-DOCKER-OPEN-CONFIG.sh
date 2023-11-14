@@ -128,8 +128,7 @@ NETFILTER_XT_TARGET_CHECKSUM
 CFS_BANDWIDTH
 "
 
-config_file=$1
-
+CONFIG_FILE=$1
 for config in $CONFIGS_ON ;do 
-  scripts/config --enable $config --file $config_file
+  scripts/config --file $CONFIG_FILE --enable $config
 done
