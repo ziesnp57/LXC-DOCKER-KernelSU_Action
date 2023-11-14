@@ -162,9 +162,10 @@ jobs:
     - name: 打入lxc补丁
       if: env.LXC_PATCH == 'true'
       run: |
-       cd $GITHUB_WORKSPACE/kernel_workspace
+         cd $GITHUB_WORKSPACE/kernel_workspace
          wget https://raw.githubusercontent.com/5kind/LXC-DOCKER-KernelSU_Action/main/patchs/Makefile.patch
-         git apply Makefile.patch
+         cd android-kernel
+         git apply ../Makefile.patch
 
 
     - name: 关闭ANDROID_PARANOID_NETWORK配置
