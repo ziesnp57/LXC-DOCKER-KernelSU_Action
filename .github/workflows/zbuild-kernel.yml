@@ -1,4 +1,4 @@
-name: 编译 android_kernel_xiaomi_sm8150 ksu docker lxc 内核
+name: 编译 ksu docker lxc 内核
 on:
   watch:
     types: [started]
@@ -22,12 +22,16 @@ jobs:
         echo "METHOD_OK=$(cat config.env | grep -w "METHOD_OK" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "ENABLE_KVM=$(cat config.env | grep -w "ENABLE_KVM" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "LXC_PATCH=$(cat config.env | grep -w "LXC_PATCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
+        echo "MAKEFILE_PATCH=$(cat config.env | grep -w "MAKEFILE_PATCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
+        echo "SOURCE_MAKEFILE_PATCH=$(cat config.env | grep -w "SOURCE_MAKEFILE_PATCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
+        echo "CUSTOM_SCRIPT=$(cat config.env | grep -w "CUSTOM_SCRIPT" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
+        echo "SOURCE_CUSTOM_SCRIPT=$(cat config.env | grep -w "SOURCE_CUSTOM_SCRIPT" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "ANDROID_PARANOID_NETWORK_OFF=$(cat config.env | grep -w "ANDROID_PARANOID_NETWORK_OFF" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "CUT_PYTHON=$(cat config.env | grep -w "CUT_PYTHON" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "KERNEL_SOURCE=$(cat config.env | grep -w "KERNEL_SOURCE" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "KERNEL_SOURCE_BRANCH=$(cat config.env | grep -w "KERNEL_SOURCE_BRANCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "KERNEL_CONFIG=$(cat config.env | grep -w "KERNEL_CONFIG" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
-        echo "KERNEL_SUBMODULE=$(cat config.env | grep -w "KERNEL_SUBMODULE" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
+        echo "KERNEL_DEPTH=$(cat config.env | grep -w "KERNEL_DEPTH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "KERNEL_IMAGE_NAME=$(cat config.env | grep -w "KERNEL_IMAGE_NAME" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "ARCH=$(cat config.env | grep -w "ARCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "EXTRA_CMDS=$(cat config.env | grep -w "EXTRA_CMDS" | head -n 1 | cut -d ":" -f 2)" >> $GITHUB_ENV
@@ -128,17 +132,17 @@ jobs:
            echo "HAVE_SOURCE_BOOT_IMAGE=true" >> $GITHUB_ENV
            fi
         
-    - name: 下载内核源码（关于深度问题，见 https://www.cnblogs.com/ink19/p/build_k20pro_kernel.html）
+    - name: 下载内核源码
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        git clone ${{ env.KERNEL_SOURCE }} -b ${{ env.KERNEL_SOURCE_BRANCH }} android-kernel --depth=2
+        if (( ${{ env.KERNEL_DEPTH }} > 0 )) ;then
+          git clone ${{ env.KERNEL_SOURCE }} -b ${{ env.KERNEL_SOURCE_BRANCH }} android-kernel --depth=${{ env.KERNEL_DEPTH }}
+        else
+          git clone ${{ env.KERNEL_SOURCE }} -b ${{ env.KERNEL_SOURCE_BRANCH }} android-kernel
+        fi
+        cd android-kernel
+        git submodule update --init --recursive
 
-
-    - name: 初始化内核子模块
-      if: env.KERNEL_SUBMODULE == 'true'
-      run: |
-        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        git submodule update --init
                 
     - name: 开启KVM配置
       if: env.ENABLE_KVM == 'true'
@@ -154,18 +158,27 @@ jobs:
       if: env.LXC_DOCKER == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        wget https://github.com/wu17481748/lxc-docker/releases/download/lxc-docker-2config/LXC-DOCKER-OPEN-CONFIG.sh
-        chmod 777 LXC-DOCKER-OPEN-CONFIG.sh
-        ./LXC-DOCKER-OPEN-CONFIG.sh android-kernel/arch/arm64/configs/${{ env.KERNEL_CONFIG }} -w
+        wget https://raw.githubusercontent.com/5kind/LXC-DOCKER-KernelSU_Action/main/scripts/LXC-DOCKER-OPEN-CONFIG.sh
+        chmod +x LXC-DOCKER-OPEN-CONFIG.sh
+        cd android-kernel
+        ../LXC-DOCKER-OPEN-CONFIG.sh arch/arm64/configs/${{ env.KERNEL_CONFIG }}
+
+
+    - name: 打入Makefile补丁
+      if: env.MAKEFILE_PATCH == 'true'
+      run: |
+         cd $GITHUB_WORKSPACE/kernel_workspace
+           wget ${{ env.SOURCE_MAKEFILE_PATCH }}
+           cd android-kernel
+           git apply ../Makefile.patch
 
       
     - name: 打入lxc补丁
       if: env.LXC_PATCH == 'true'
       run: |
-         cd $GITHUB_WORKSPACE/kernel_workspace
-         wget https://raw.githubusercontent.com/5kind/LXC-DOCKER-KernelSU_Action/main/patchs/Makefile.patch
-         cd android-kernel
-         git apply ../Makefile.patch
+       cd $GITHUB_WORKSPACE/kernel_workspace
+         wget https://github.com/wu17481748/lxc-docker/releases/download/lxc/lxc.patch
+         patch -p0 < lxc.patch
 
 
     - name: 关闭ANDROID_PARANOID_NETWORK配置
@@ -175,8 +188,14 @@ jobs:
         sed -i '/CONFIG_ANDROID_PARANOID_NETWORK/d' android-kernel/arch/arm64/configs/${{ env.KERNEL_CONFIG }}
         echo "# CONFIG_ANDROID_PARANOID_NETWORK is not set" >> android-kernel/arch/arm64/configs/${{ env.KERNEL_CONFIG }}
         
-        
-  
+
+    - name: 运行自定义脚本
+      if: env.CUSTOM_SCRIPT == 'true'
+      run: |
+            cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+            curl -LSs ${{ env.SOURCE_CUSTOM_SCRIPT }} | bash 
+
+
     - name: 开启KSU
       if: env.ENABLE_KERNELSU == 'true'
       run: |
@@ -260,7 +279,7 @@ jobs:
                exit 1
            fi
        fi
-       android-kernel/scripts/extract-ikconfig android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_IMAGE_NAME }} | tee real.config
+       android-kernel/scripts/extract-ikconfig android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_IMAGE_NAME }} | tee AnyKernel3/.config
   
     - name: 制作Anykernel3卡刷包
       if: env.CHECK_FILE_IS_OK == 'true'
@@ -296,20 +315,6 @@ jobs:
       with:
         name: ${{ env.KERNEL_IMAGE_NAME }}${{ env.UPLOADNAME }}-${{ env.DEVICE }}-${{ env.BUILD_TIME }}
         path: kernel_workspace/android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_IMAGE_NAME }}
-
-    - name: 上传 expect config
-      if: env.CHECK_FILE_IS_OK == 'true'
-      uses: actions/upload-artifact@v3
-      with:
-        name: expect-config-${{ env.DEVICE }}-${{ env.BUILD_TIME }}
-        path: kernel_workspace/android-kernel/out/.config
-        
-    - name: 上传 real config
-      if: env.CHECK_FILE_IS_OK == 'true'
-      uses: actions/upload-artifact@v3
-      with:
-        name: real-config-${{ env.DEVICE }}-${{ env.BUILD_TIME }}
-        path: kernel_workspace/real.config
         
     - name: 上传Upload AnyKernel3
       if: env.CHECK_FILE_IS_OK == 'true'
