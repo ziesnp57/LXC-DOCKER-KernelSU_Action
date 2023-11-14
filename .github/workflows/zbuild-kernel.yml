@@ -184,16 +184,17 @@ jobs:
     - name: 关闭ANDROID_PARANOID_NETWORK配置
       if: env.ANDROID_PARANOID_NETWORK_OFF == 'true'
       run: |
-        cd $GITHUB_WORKSPACE/kernel_workspace
-        sed -i '/CONFIG_ANDROID_PARANOID_NETWORK/d' android-kernel/arch/arm64/configs/${{ env.KERNEL_CONFIG }}
-        echo "# CONFIG_ANDROID_PARANOID_NETWORK is not set" >> android-kernel/arch/arm64/configs/${{ env.KERNEL_CONFIG }}
+        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        scripts/config --file arch/arm64/configs/${{ env.KERNEL_CONFIG }} --disable ANDROID_PARANOID_NETWORK
         
 
     - name: 运行自定义脚本
       if: env.CUSTOM_SCRIPT == 'true'
       run: |
-            cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-            curl -LSs ${{ env.SOURCE_CUSTOM_SCRIPT }} | bash 
+            cd $GITHUB_WORKSPACE/kernel_workspace
+            curl -o custom.sh ${{ env.SOURCE_CUSTOM_SCRIPT }}
+            cd android-kernel
+            sh ../custom.sh android-kernel/arch/arm64/configs/${{ env.KERNEL_CONFIG }}
 
 
     - name: 开启KSU
