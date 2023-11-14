@@ -195,7 +195,7 @@ jobs:
             cd $GITHUB_WORKSPACE/kernel_workspace
             curl -o custom.sh ${{ env.SOURCE_CUSTOM_SCRIPT }}
             cd android-kernel
-            sh ../custom.sh android-kernel/arch/arm64/configs/${{ env.KERNEL_CONFIG }}
+            sh ../custom.sh arch/arm64/configs/${{ env.KERNEL_CONFIG }}
 
 
     - name: Setup Kali-Nethunter  
