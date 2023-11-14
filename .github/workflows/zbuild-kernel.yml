@@ -275,7 +275,26 @@ jobs:
             make -j$(nproc --all) CC=clang O=out ARCH=${{ env.ARCH }} ${{ env.CUSTOM_CMDS }} CROSS_COMPILE="aarch64-linux-gnu-" CROSS_COMPILE_ARM32="arm-linux-gnueabi-" ${{ env.EXTRA_CMDS }} ${{ env.EXTRA_CMDT }} ${{ env.EXTRA_CMDU }}
             fi
         fi
-        
+             
+    - name: 检查编译内核生成文件
+      run: |
+         cd $GITHUB_WORKSPACE/kernel_workspace
+         if [ -f android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_IMAGE_NAME }} ]; then
+             echo "CHECK_FILE_IS_OK=true" >> $GITHUB_ENV
+         else
+             echo "Kernel output file is empty"
+             exit 1
+         fi
+         if [ ${{ env.NEED_DTBO }} = true ]; then
+             if [ -f android-kernel/out/arch/${{ env.ARCH }}/boot/dtbo.img ]; then
+                 echo "CHECK_DTBO_IS_OK=true" >> $GITHUB_ENV
+             else
+                 echo "DTBO image is empty"
+                 exit 1
+             fi
+         fi
+         android-kernel/scripts/extract-ikconfig android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_IMAGE_NAME }}
+         
     - name: 制作Anykernel3卡刷包
       if: env.CHECK_FILE_IS_OK == 'true'
       run: |
@@ -290,26 +309,7 @@ jobs:
           fi
           rm -rf AnyKernel3/.git* AnyKernel3/README.md
   
-          
-    - name: 检查编译内核生成文件
-      run: |
-       cd $GITHUB_WORKSPACE/kernel_workspace
-       if [ -f android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_IMAGE_NAME }} ]; then
-           echo "CHECK_FILE_IS_OK=true" >> $GITHUB_ENV
-       else
-           echo "Kernel output file is empty"
-           exit 1
-       fi
-       if [ ${{ env.NEED_DTBO }} = true ]; then
-           if [ -f android-kernel/out/arch/${{ env.ARCH }}/boot/dtbo.img ]; then
-               echo "CHECK_DTBO_IS_OK=true" >> $GITHUB_ENV
-           else
-               echo "DTBO image is empty"
-               exit 1
-           fi
-       fi
-       android-kernel/scripts/extract-ikconfig android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_IMAGE_NAME }} | tee AnyKernel3/.config
-  
+
     - name: 制作合成新的内核镜像
       if: env.HAVE_SOURCE_BOOT_IMAGE == 'true' && env.CHECK_FILE_IS_OK == 'true'
       run: |
