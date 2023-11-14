@@ -155,8 +155,9 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         wget https://raw.githubusercontent.com/5kind/LXC-DOCKER-KernelSU_Action/main/scripts/LXC-DOCKER-OPEN-CONFIG.sh
-        chmod 777 LXC-DOCKER-OPEN-CONFIG.sh
-        ./LXC-DOCKER-OPEN-CONFIG.sh android-kernel/arch/arm64/configs/${{ env.KERNEL_CONFIG }}
+        chmod +x LXC-DOCKER-OPEN-CONFIG.sh
+        cd android-kernel
+        ../LXC-DOCKER-OPEN-CONFIG.sh arch/arm64/configs/${{ env.KERNEL_CONFIG }}
 
       
     - name: 打入lxc补丁
