@@ -208,11 +208,9 @@ jobs:
               #patch -p1 < kali-nethunter_patches/add-wifi-injection.patch
               patch -p1 < kali-nethunter_patches/fix-ath9k-naming-conflict.patch
               sleep 8
-              git clone https://github.com/Biohazardousrom/Kali-defconfig-checker.git kali
-              cd kali
-              chmod +x *.sh
+              wget https://raw.githubusercontent.com/5kind/LXC-DOCKER-KernelSU_Action/main/scripts/check-kernel-config
               chmod +x check-kernel-config
-              ./check-kernel-config $GITHUB_WORKSPACE/kernel_workspace/android-kernel/arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} -w
+              ./check-kernel-config $GITHUB_WORKSPACE/kernel_workspace/android-kernel/arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
 
 
     - name: 开启KSU
