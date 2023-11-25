@@ -172,13 +172,14 @@ jobs:
       if: env.CONTAINER_PATCH == 'true'
       run: |
        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-       if [ -f net/netfilter/xt_qtaguid.c ]; then
-         patch -p1 < $GITHUB_WORKSPACE/patches/Android-Container/lxc.patch
-       fi
+       [ -f kernel/cgroup/cgroup.c ] && 
+       patch -p1 < $GITHUB_WORKSPACE/patches/Android-Container/cgroup.patch
 
-       if [ -f kernel/cgroup/cpuset.c ]; then
-         patch -p1 < $GITHUB_WORKSPACE/patches/Android-Container/docker.patch
-       fi
+       [ -f kernel/cgroup/cpuset.c ] && 
+       patch -p1 < $GITHUB_WORKSPACE/patches/Android-Container/cpuset.patch
+
+       [ -f net/netfilter/xt_qtaguid.c ] && 
+       patch -p1 < $GITHUB_WORKSPACE/patches/Android-Container/xt_qtaguid.patch
 
 
     - name: 关闭ANDROID_PARANOID_NETWORK配置
