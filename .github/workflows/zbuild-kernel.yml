@@ -1,4 +1,4 @@
-name: 编译 ksu docker lxc 内核
+name: z编译 ksu docker lxc 内核
 on:
   watch:
     types: [started]
@@ -19,14 +19,12 @@ jobs:
     - name: 工作配置
       run: |
         echo "LXC_DOCKER=$(cat config.env | grep -w "LXC_DOCKER" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
-        echo "ENABLE_NETHUNTER=$(cat config.env | grep -w "ENABLE_KERNELSU" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
+        echo "ENABLE_NETHUNTER=$(cat config.env | grep -w "ENABLE_NETHUNTER" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "METHOD_OK=$(cat config.env | grep -w "METHOD_OK" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "ENABLE_KVM=$(cat config.env | grep -w "ENABLE_KVM" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "LXC_PATCH=$(cat config.env | grep -w "LXC_PATCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "MAKEFILE_PATCH=$(cat config.env | grep -w "MAKEFILE_PATCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
-        echo "SOURCE_MAKEFILE_PATCH=$(cat config.env | grep -w "SOURCE_MAKEFILE_PATCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "CUSTOM_SCRIPT=$(cat config.env | grep -w "CUSTOM_SCRIPT" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
-        echo "SOURCE_CUSTOM_SCRIPT=$(cat config.env | grep -w "SOURCE_CUSTOM_SCRIPT" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "ANDROID_PARANOID_NETWORK_OFF=$(cat config.env | grep -w "ANDROID_PARANOID_NETWORK_OFF" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "CUT_PYTHON=$(cat config.env | grep -w "CUT_PYTHON" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "KERNEL_SOURCE=$(cat config.env | grep -w "KERNEL_SOURCE" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
@@ -158,28 +156,24 @@ jobs:
     - name: 开启lxc和docker配置
       if: env.LXC_DOCKER == 'true'
       run: |
-        cd $GITHUB_WORKSPACE/kernel_workspace
-        wget https://raw.githubusercontent.com/5kind/LXC-DOCKER-KernelSU_Action/main/scripts/LXC-DOCKER-OPEN-CONFIG.sh
-        chmod +x LXC-DOCKER-OPEN-CONFIG.sh
-        cd android-kernel
-        ../LXC-DOCKER-OPEN-CONFIG.sh arch/arm64/configs/${{ env.KERNEL_CONFIG }}
+        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        bash $GITHUB_WORKSPACE/scripts/check-kernel-config/LXC-DOCKER-OPEN-CONFIG.sh arch/arm64/configs/${{ env.KERNEL_CONFIG }} -w
 
 
     - name: 打入Makefile补丁
       if: env.MAKEFILE_PATCH == 'true'
       run: |
-         cd $GITHUB_WORKSPACE/kernel_workspace
-           wget ${{ env.SOURCE_MAKEFILE_PATCH }}
-           cd android-kernel
-           git apply ../Makefile.patch
+         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+         patch -p1 < $GITHUB_WORKSPACE/patches/Makefile.patch
 
       
     - name: 打入lxc补丁
       if: env.LXC_PATCH == 'true'
       run: |
        cd $GITHUB_WORKSPACE/kernel_workspace
-         wget https://github.com/wu17481748/lxc-docker/releases/download/lxc/lxc.patch
-         patch -p0 < lxc.patch
+       if [ -f android-kernel/net/netfilter/xt_qtaguid.c ]; then
+         patch -p1 < $GITHUB_WORKSPACE/patches/lxc.patch
+       fi
 
 
     - name: 关闭ANDROID_PARANOID_NETWORK配置
@@ -192,25 +186,23 @@ jobs:
     - name: 运行自定义脚本
       if: env.CUSTOM_SCRIPT == 'true'
       run: |
-            cd $GITHUB_WORKSPACE/kernel_workspace
-            curl -o custom.sh ${{ env.SOURCE_CUSTOM_SCRIPT }}
-            cd android-kernel
-            sh ../custom.sh arch/arm64/configs/${{ env.KERNEL_CONFIG }}
+        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        bash $GITHUB_WORKSPACE/scripts/customize.sh arch/arm64/configs/${{ env.KERNEL_CONFIG }}
 
 
     - name: Setup Kali-Nethunter  
       if: env.ENABLE_NETHUNTER == 'true'
       run: |
-              cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-              git clone https://github.com/tomxi1997/kali-nethunter_patches.git
-              patch -p1 < kali-nethunter_patches/add-rtl88xxau-5.6.4.2-drivers.patch
-              patch -p1 < kali-nethunter_patches/add-wifi-injection-4.14.patch
-              #patch -p1 < kali-nethunter_patches/add-wifi-injection.patch
-              patch -p1 < kali-nethunter_patches/fix-ath9k-naming-conflict.patch
-              sleep 8
-              wget https://raw.githubusercontent.com/5kind/LXC-DOCKER-KernelSU_Action/main/scripts/check-kernel-config
-              chmod +x check-kernel-config
-              ./check-kernel-config $GITHUB_WORKSPACE/kernel_workspace/android-kernel/arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        nethunter_patches=$GITHUB_WORKSPACE/patches/kali-nethunter-kernel/4.14
+        patch -p1 < $nethunter_patches/add-rtl8188eus-to-rtl8xxxu-drivers-4.14.patch
+        patch -p1 < $nethunter_patches/add-rtl8188eus-to-rtl8xxxu-drivers.patch
+        patch -p1 < $nethunter_patches/add-rtl88xxau-5.6.4.2-drivers.patch
+        patch -p1 < $nethunter_patches/add-wifi-injection-4.14.patch
+        patch -p1 < $nethunter_patches/fix-ath9k-naming-conflict.patch
+        patch -p1 < $nethunter_patches/fix-thread_info.h-compile-time-errors.patch
+        bash $GITHUB_WORKSPACE/scripts/check-kernel-config/Kali-defconfig-checker.sh arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+
 
 
     - name: 开启KSU
@@ -276,7 +268,10 @@ jobs:
             fi
         fi
              
-    - name: 检查编译内核生成文件
+        
+  
+        
+        - name: 检查编译内核生成文件
       run: |
          cd $GITHUB_WORKSPACE/kernel_workspace
          if [ -f android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_IMAGE_NAME }} ]; then
@@ -293,7 +288,7 @@ jobs:
                  exit 1
              fi
          fi
-         android-kernel/scripts/extract-ikconfig android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_IMAGE_NAME }}
+         android-kernel/scripts/extract-ikconfig android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_IMAGE_NAME }} | tee .config
          
     - name: 制作Anykernel3卡刷包
       if: env.CHECK_FILE_IS_OK == 'true'
@@ -308,7 +303,7 @@ jobs:
               cp android-kernel/out/arch/${{ env.ARCH }}/boot/dtbo.img AnyKernel3/
           fi
           rm -rf AnyKernel3/.git* AnyKernel3/README.md
-  
+          cp .config AnyKernel3/
 
     - name: 制作合成新的内核镜像
       if: env.HAVE_SOURCE_BOOT_IMAGE == 'true' && env.CHECK_FILE_IS_OK == 'true'
