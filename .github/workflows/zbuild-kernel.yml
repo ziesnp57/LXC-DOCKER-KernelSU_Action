@@ -22,7 +22,7 @@ jobs:
         echo "ENABLE_NETHUNTER=$(cat config.env | grep -w "ENABLE_NETHUNTER" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "METHOD_OK=$(cat config.env | grep -w "METHOD_OK" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "ENABLE_KVM=$(cat config.env | grep -w "ENABLE_KVM" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
-        echo "LXC_PATCH=$(cat config.env | grep -w "LXC_PATCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
+        echo "CONTAINER_PATCH=$(cat config.env | grep -w "CONTAINER_PATCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "MAKEFILE_PATCH=$(cat config.env | grep -w "MAKEFILE_PATCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "CUSTOM_SCRIPT=$(cat config.env | grep -w "CUSTOM_SCRIPT" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "ANDROID_PARANOID_NETWORK_OFF=$(cat config.env | grep -w "ANDROID_PARANOID_NETWORK_OFF" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
@@ -62,6 +62,7 @@ jobs:
         sudo apt-get update
         sudo apt-get install binutils binutils-aarch64-linux-gnu binutils-arm-linux-gnueabi git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 lib32ncurses5-dev libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python2 python3
         mkdir -p $GITHUB_WORKSPACE/kernel_workspace
+        git submodule update --init --recursive
 
     - name: 切换python2.7
       if: env.CUT_PYTHON == 'true'
@@ -167,12 +168,16 @@ jobs:
          patch -p1 < $GITHUB_WORKSPACE/patches/Makefile.patch
 
       
-    - name: 打入lxc补丁
-      if: env.LXC_PATCH == 'true'
+    - name: 打入Android-Container补丁
+      if: env.CONTAINER_PATCH == 'true'
       run: |
-       cd $GITHUB_WORKSPACE/kernel_workspace
-       if [ -f android-kernel/net/netfilter/xt_qtaguid.c ]; then
-         patch -p1 < $GITHUB_WORKSPACE/patches/lxc.patch
+       cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+       if [ -f net/netfilter/xt_qtaguid.c ]; then
+         patch -p1 < $GITHUB_WORKSPACE/patches/Android-Container/lxc.patch
+       fi
+
+       if [ -f kernel/cgroup/cpuset.c ]; then
+         patch -p1 < $GITHUB_WORKSPACE/patches/Android-Container/docker.patch
        fi
 
 
