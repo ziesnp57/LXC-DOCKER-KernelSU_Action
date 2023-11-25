@@ -1,4 +1,4 @@
-name: z编译 ksu docker lxc 内核
+name: 编译 ksu docker lxc nethunter 内核
 on:
   watch:
     types: [started]
@@ -271,7 +271,7 @@ jobs:
         
   
         
-        - name: 检查编译内核生成文件
+    - name: 检查编译内核生成文件
       run: |
          cd $GITHUB_WORKSPACE/kernel_workspace
          if [ -f android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_IMAGE_NAME }} ]; then
@@ -288,6 +288,7 @@ jobs:
                  exit 1
              fi
          fi
+  
          android-kernel/scripts/extract-ikconfig android-kernel/out/arch/${{ env.ARCH }}/boot/${{ env.KERNEL_IMAGE_NAME }} | tee .config
          
     - name: 制作Anykernel3卡刷包
