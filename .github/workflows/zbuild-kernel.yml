@@ -196,7 +196,7 @@ jobs:
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         nethunter_patches=$GITHUB_WORKSPACE/patches/kali-nethunter-kernel/4.14
         patch -p1 < $nethunter_patches/add-rtl8188eus-to-rtl8xxxu-drivers-4.14.patch
-        patch -p1 < $nethunter_patches/add-rtl8188eus-to-rtl8xxxu-drivers.patch
+        # patch -p1 < $nethunter_patches/add-rtl8188eus-to-rtl8xxxu-drivers.patch
         patch -p1 < $nethunter_patches/add-rtl88xxau-5.6.4.2-drivers.patch
         patch -p1 < $nethunter_patches/add-wifi-injection-4.14.patch
         patch -p1 < $nethunter_patches/fix-ath9k-naming-conflict.patch
