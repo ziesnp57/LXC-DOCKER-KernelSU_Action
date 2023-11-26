@@ -173,8 +173,12 @@ jobs:
       run: |
        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
        CONTAINER_PATCHES=$GITHUB_WORKSPACE/patches/Android-Container
-       if [ -f kernel/cgroup/cgroup.c ] && false; then
-        patch -p1 < $CONTAINER_PATCHES/cgroup.patch
+       # if [ -f kernel/cgroup/cgroup.c ]; then
+       # patch -p1 < $CONTAINER_PATCHES/cgroup.patch
+       # fi
+
+       if [ -f kernel/cgroup/cgroup-v1.c ]; then
+         patch -p1 < $CONTAINER_PATCHES/cgroup-v1.patch
        fi
 
        if [ -f kernel/cgroup/cpuset.c ]; then
