@@ -147,18 +147,18 @@ jobs:
     - name: 开启KVM配置
       if: env.ENABLE_KVM == 'true'
       run: |
-         cd $GITHUB_WORKSPACE/kernel_workspace
-         echo "CONFIG_VIRTUALIZATION=y" >> android-kernel/arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-         echo "CONFIG_KVM=y" >> android-kernel/arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-         echo "CONFIG_VHOST_NET=y" >> android-kernel/arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-         echo "CONFIG_VHOST_CROSS_ENDIAN_LEGACY=y" >> android-kernel/arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+         scripts/config --file arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} --enable CONFIG_VIRTUALIZATION
+         scripts/config --file arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} --enable CONFIG_KVM
+         scripts/config --file arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} --enable CONFIG_VHOST_NET
+         scripts/config --file arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} --enable CONFIG_VHOST_CROSS_ENDIAN_LEGACY
          
          
     - name: 开启lxc和docker配置
       if: env.LXC_DOCKER == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        bash $GITHUB_WORKSPACE/scripts/check-kernel-config/LXC-DOCKER-OPEN-CONFIG.sh arch/arm64/configs/${{ env.KERNEL_CONFIG }} -w
+        bash $GITHUB_WORKSPACE/scripts/check-kernel-config/LXC-DOCKER-OPEN-CONFIG.sh arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} -w
 
 
     - name: 打入Makefile补丁
@@ -177,9 +177,9 @@ jobs:
         patch -p1 < $CONTAINER_PATCHES/cgroup.patch
        fi
 
-       # if [ -f kernel/cgroup/cgroup-v1.c ]; then
-       # patch -p1 < $CONTAINER_PATCHES/cgroup-v1.patch
-       # fi
+        # if [ -f kernel/cgroup/cgroup-v1.c ]; then
+        # patch -p1 < $CONTAINER_PATCHES/cgroup-v1.patch
+        # fi
 
        if [ -f kernel/cgroup/cpuset.c ]; then
         patch -p1 < $CONTAINER_PATCHES/cpuset.patch
@@ -201,7 +201,7 @@ jobs:
       if: env.CUSTOM_SCRIPT == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        bash $GITHUB_WORKSPACE/scripts/customize.sh arch/arm64/configs/${{ env.KERNEL_CONFIG }}
+        bash $GITHUB_WORKSPACE/scripts/customize.sh arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
 
 
     - name: Setup Kali-Nethunter  
@@ -230,23 +230,22 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         if [ ${{ env.ADD_KPROBES_CONFIG }} = true ]; then
-
-            echo "CONFIG_MODULES=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-            echo "CONFIG_KPROBES=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-            echo "CONFIG_HAVE_KPROBES=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-            echo "CONFIG_KPROBE_EVENTS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+            scripts/config --file arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} --enable CONFIG_MODULES
+            scripts/config --file arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} --enable CONFIG_KPROBES
+            scripts/config --file arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} --enable CONFIG_HAVE_KPROBES
+            scripts/config --file arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} --enable CONFIG_KPROBE_EVENTS
         fi
         if [ ${{ env.ADD_OVERLAYFS_CONFIG }} = true ]; then
-            echo "CONFIG_OVERLAY_FS=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+            scripts/config --file arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} --enable CONFIG_OVERLAY_FS
         fi
         if [ ${{ env.DISABLE-LTO }} = true ]; then
-            sed -i 's/CONFIG_LTO=y/CONFIG_LTO=n/' arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-            sed -i 's/CONFIG_LTO_CLANG=y/CONFIG_LTO_CLANG=n/' arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-            sed -i 's/CONFIG_THINLTO=y/CONFIG_THINLTO=n/' arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
-            echo "CONFIG_LTO_NONE=y" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+            scripts/config --file arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} --disable CONFIG_LTO
+            scripts/config --file arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} --disable CONFIG_LTO_CLANG
+            scripts/config --file arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} --disable CONFIG_THINLTO
+            scripts/config --file arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} --enable  CONFIG_LTO_NONE
         fi
         if [ ${{ env.DISABLE_CC_WERROR }} = true ]; then
-            echo "CONFIG_CC_WERROR=n" >> arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }}
+            scripts/config --file arch/${{ env.ARCH }}/configs/${{ env.KERNEL_CONFIG }} --disable CONFIG_CC_WERROR
         fi
 
     - name: 设置ccache缓存
