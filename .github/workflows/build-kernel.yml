@@ -64,8 +64,6 @@ jobs:
         echo "CUSTOM_SCRIPT=$(cat $CONFIG_ENV | grep -w "CUSTOM_SCRIPT" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "ANDROID_PARANOID_NETWORK_OFF=$(cat $CONFIG_ENV | grep -w "ANDROID_PARANOID_NETWORK_OFF" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "CUT_PYTHON=$(cat $CONFIG_ENV | grep -w "CUT_PYTHON" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
-        echo "EXTRA_CMDT=$(cat $CONFIG_ENV | grep -w "EXTRA_CMDT" | head -n 1 | cut -d ":" -f 2)" >> $GITHUB_ENV
-        echo "EXTRA_CMDU=$(cat $CONFIG_ENV | grep -w "EXTRA_CMDU" | head -n 1 | cut -d ":" -f 2)" >> $GITHUB_ENV
 
     - name: Set swap to 10G
       uses: pierotofy/set-swap-space@master
