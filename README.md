@@ -1,6 +1,6 @@
 **中文** | [English](README_EN.md)
 
-# KernelSU+LXC+DOCKER Action
+# KernelSU Action
 
 用于 Non-GKI Kernel 的 Action，具有一定的普遍性，需要了解内核及 Android 的相关知识得以运用。
 
@@ -74,10 +74,9 @@ Fork 本仓库到你的储存库然后按照以下内容编辑 config.env，之�
 由于 [#23](https://github.com/xiaoleGun/KernelSU_Action/issues/23) 的需要，我们提供可自定义 Google 上游分支的选项，主要的有分支有
 | Clang 分支 |
 | ---------- |
-| main |
-| android-gs-bluejay-5.10-android13 |
-| android-msm-bonito-4.9-android12-qpr1 |
-| android-msm-coral-4.14-android13 |
+| master |
+| master-kernel-build-2021 |
+| master-kernel-build-2022 |
 
 或者其它分支，请根据自己的需求在 https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 中寻找
 
@@ -88,8 +87,11 @@ Fork 本仓库到你的储存库然后按照以下内容编辑 config.env，之�
 | ---------- | ----------------- | --------------- |
 | 12.0.5 | Android S | r416183b |
 | 14.0.6 | Android T | r450784d |
-| 14.0.7 | | r450784e |
-| 15.0.1 | | r458507 |
+| 14.0.7 |               | r450784e |
+| 15.0.1 |               | r458507 |
+| 17.0.1 |               | r487747b |
+| 17.0.2 | Android U | r487747c |
+
 
 一般 Clang12 就能通过大部分 4.14 及以上的内核的编译
 我自己的 MI 6X 4.19 使用的是 r450784d
@@ -122,6 +124,16 @@ Fork 本仓库到你的储存库然后按照以下内容编辑 config.env，之�
 - main 分支(开发版): `KERNELSU_TAG=main`
 - 最新 TAG(稳定版): `KERNELSU_TAG=`
 - 指定 TAG(如`v0.5.2`): `KERNELSU_TAG=v0.5.2`
+
+#### KernelSU Manager signature size and hash
+
+自定义KernelSU管理器签名的size值和hash值，如果不需要自定义管理器则请留空或填入官方默认值：
+
+`KSU_EXPECTED_SIZE=0x033b`
+
+`KSU_EXPECTED_HASH=c371061b19d8c7d7d6133c6a9bafe198fa944e50c1b31c9d8daa8d7f1fc2d2d6`
+
+可键入`ksud debug get-sign <apk_path>`获取apk签名的size值和hash值
 
 ### Disable LTO
 

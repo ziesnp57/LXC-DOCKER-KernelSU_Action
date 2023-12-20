@@ -86,8 +86,10 @@ Enter the Clang version to use.
 | ------------- | ----------------------------- | ------------------ |
 | 12.0.5 | Android S | r416183b |
 | 14.0.6 | Android T | r450784d |
-| 14.0.7 | | r450784e |
-| 15.0.1 | | r458507 |
+| 14.0.7 |               | r450784e |
+| 15.0.1 |               | r458507 |
+| 17.0.1 |               | r487747b |
+| 17.0.2 | Android U | r487747c |
 
 Generally, Clang12 can compile most of the 4.14 and above kernels. My MI 6X 4.19 uses r450784d.
 
@@ -122,6 +124,16 @@ Select the branch or tag of KernelSU:
 - main branch (development version): `KERNELSU_TAG=main`
 - Latest TAG (stable version): `KERNELSU_TAG=`
 - Specify the TAG (such as `v0.5.2`): `KERNELSU_TAG=v0.5.2`
+
+#### KernelSU Manager signature size and hash
+
+Customize the size and hash values of the KernelSU manager signature, if you don't need to customize the manager then please leave them empty or fill in the official default values:
+
+`KSU_EXPECTED_SIZE=0x033b`
+
+`KSU_EXPECTED_HASH=c371061b19d8c7d7d6133c6a9bafe198fa944e50c1b31c9d8daa8d7f1fc2d2d6`
+
+You can type `ksud debug get-sign <apk_path>` to get the size and hash of the apk signature.
 
 ### Add Kprobes Config
 
