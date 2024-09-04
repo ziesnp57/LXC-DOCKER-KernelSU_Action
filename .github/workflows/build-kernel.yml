@@ -37,7 +37,7 @@ jobs:
           cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
           scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_VIRTUALIZATION
           scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_KVM
-          scripts/config --file arch/$arm64/configs/vendor/sm8250_defconfig --enable CONFIG_VHOST_NET
+          scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_VHOST_NET
           scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_VHOST_CROSS_ENDIAN_LEGACY
 
       - name: 设置 LXC/Docker
@@ -51,7 +51,7 @@ jobs:
           export LXC_PATCHES=$GITHUB_WORKSPACE/patches/lxc-docker
           bash $GITHUB_WORKSPACE/scripts/patch/lxc-docker.sh
 
-      - name: 关闭 ANDROID_PARANOID_NETWORK
+      - name: 关闭安卓网络配置
         run: |
           cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
           scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --disable ANDROID_PARANOID_NETWORK
@@ -67,7 +67,7 @@ jobs:
           cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
           patch -p1 < $GITHUB_WORKSPACE/patches/Makefile.patch
 
-      - name: Run customize script
+      - name: 运行自定义脚本
         run: |
           cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
           bash $GITHUB_WORKSPACE/scripts/customize.sh arch/arm64/configs/vendor/sm8250_defconfig
@@ -88,6 +88,7 @@ jobs:
           
           
           scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_OVERLAY_FS
+          
           
           scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --disable CONFIG_LTO
           scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --disable CONFIG_LTO_CLANG
@@ -120,13 +121,13 @@ jobs:
           cp android-kernel/out/arch/arm64/boot/Image AnyKernel3/
           rm -rf AnyKernel3/.git* AnyKernel3/README.md
 
-      - name: 发布 Image
+      - name: 制作 Image
         uses: actions/upload-artifact@v3
         with:
           name: Image-KernelSU-${{ env.BUILD_TIME }}
           path: kernel_workspace/android-kernel/out/arch/arm64/boot/Image
 
-      - name: 发布 AnyKernel3
+      - name: 制作 AnyKernel3
         uses: actions/upload-artifact@v3
         with:
           name: AnyKernel3-bigshot-KernelSU-${{ env.BUILD_TIME }}
