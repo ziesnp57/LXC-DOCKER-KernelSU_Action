@@ -89,7 +89,6 @@ jobs:
           
           scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_OVERLAY_FS
           
-          # LTO
           scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --disable CONFIG_LTO
           scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --disable CONFIG_LTO_CLANG
           scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --disable CONFIG_THINLTO
