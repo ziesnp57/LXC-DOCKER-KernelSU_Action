@@ -67,7 +67,7 @@ jobs:
           patch -p1 < kali-nethunter-kernel/patches/4.19/fix-ath9k-naming-conflict.patch
           patch -p1 < kali-nethunter-kernel/patches/4.19/add-rtl88xxau-5.6.4.2-drivers.patch
           
-          bash $GITHUB_WORKSPACE/scripts/check-kernel-config/Kali-defconfig-checker.sh arch/arm64/configs/vendor/sm8250_defconfig
+          bash $GITHUB_WORKSPACE/scripts/check-kernel-config/LXC-DOCKER-OPEN-CONFIG.sh arch/arm64/configs/vendor/sm8250_defconfig
 
       - name: 启用 KernelSU
         run: |
@@ -108,24 +108,17 @@ jobs:
           make -j$(nproc --all) CROSS_COMPILE=aarch64-linux-gnu- CC=clang O=out ARCH=arm64 vendor/sm8250_defconfig
           make -j$(nproc --all) CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" O=out ARCH=arm64
 
+
       - name: 制作Anykernel3卡刷包
         run: |
           cd $GITHUB_WORKSPACE/kernel_workspace
-          git clone https://github.com/osm0sis/AnyKernel3
-          sed -i 's/do.devicecheck=1/do.devicecheck=0/g' AnyKernel3/anykernel.sh
-          sed -i 's!block=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot;!block=auto;!g' AnyKernel3/anykernel.sh
-          sed -i 's/is_slot_device=0;/is_slot_device=auto;/g' AnyKernel3/anykernel.sh
-          cp android-kernel/out/arch/arm64/boot/Image AnyKernel3/
-          rm -rf AnyKernel3/.git* AnyKernel3/README.md
-
-      - name: 发布 Image
-        uses: actions/upload-artifact@v3
-        with:
-          name: Image-KernelSU-${{ env.BUILD_TIME }}
-          path: kernel_workspace/android-kernel/out/arch/arm64/boot/Image
+          unzip $GITHUB_WORKSPACE/AnyKernel3.zip -d AnyKernel3
+          cp android-kernel/out/arch/arm64/boot/Image AnyKernel3
+          zip -r AnyKernel3-RMX3366-KernelSU-${{ env.BUILD_TIME }}.zip AnyKernel3/*
+          rm -rf AnyKernel3/*
 
       - name: 发布AnyKernel3卡刷包
         uses: actions/upload-artifact@v3
         with:
-          name: AnyKernel3-bigshot-KernelSU-${{ env.BUILD_TIME }}
+          name: AnyKernel3-RMX3366-KernelSU-${{ env.BUILD_TIME }}
           path: kernel_workspace/AnyKernel3/*
