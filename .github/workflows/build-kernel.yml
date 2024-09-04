@@ -51,6 +51,14 @@ jobs:
 
       - name: 启用 Kali-Nethunter
         run: |
+          cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+          git clone https://gitlab.com/kalilinux/nethunter/build-scripts/kali-nethunter-kernel
+          
+          patch -p1 < kali-nethunter-kernel/patches/4.19/add-wifi-injection-4.14.patch
+          patch -p1 < kali-nethunter-kernel/patches/4.19/fix-ath9k-naming-conflict.patch
+          patch -p1 < kali-nethunter-kernel/patches/4.19/add-rtl88xxau-5.6.4.2-drivers.patch
+          
+          bash $GITHUB_WORKSPACE/scripts/check-kernel-config/Kali-defconfig-checker.sh arch/arm64/configs/vendor/sm8250_defconfig -w
 
       - name: 启用 KernelSU
         run: |
