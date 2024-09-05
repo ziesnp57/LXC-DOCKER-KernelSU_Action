@@ -59,16 +59,20 @@ jobs:
           echo "# CONFIG_ANDROID_PARANOID_NETWORK is not set" >> arch/arm64/configs/vendor/sm8250_defconfig
 
           #sed -i '/CONFIG_LOCALVERSION/d' arch/arm64/configs/vendor/sm8250_defconfig
-          #echo 'CONFIG_LOCALVERSION="-LXC-KernelSU-support_Pdx"' >> arch/arm64/configs/vendor/sm8250_defconfig
+          #echo 'CONFIG_LOCALVERSION="-LXC-KernelSU"' >> arch/arm64/configs/vendor/sm8250_defconfig
 
           chmod +x $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/runcpatch.sh
           if [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/kernel/cgroup/cgroup.c ]; then
-           sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/runcpatch.sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel/kernel/cgroup/cgroup.c
+            sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/runcpatch.sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel/kernel/cgroup/cgroup.c
           fi
 
-          #if [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/net/netfilter/xt_qtaguid.c ]; then
-           #patch -p0 < $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/xt_qtaguid.patch
-          #fi
+          if [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/kernel/cgroup.c ]; then
+            sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/runcpatch.sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel/kernel/cgroup.c
+          fi
+
+          if [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/net/netfilter/xt_qtaguid.c ]; then
+            patch -p0 < $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/xt_qtaguid.patch
+          fi
           
       - name: 关闭 Android 网络配置
         run: |
