@@ -53,21 +53,21 @@ jobs:
       - name: 打入Android-Container补丁
         run: |
           cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-          CONTAINER_PATCHES=$GITHUB_WORKSPACE/patches/Android-Container
-          if [ -f kernel/cgroup/cgroup.c ]; then
-          patch -p1 < $CONTAINER_PATCHES/cgroup.patch
+          rm -rf utils
+          git clone https://github.com/tomxi1997/lxc-docker-support-for-android.git utils
+          sed -i '/CONFIG_ANDROID_PARANOID_NETWORK/d' arch/arm64/configs/vendor/sm8250_defconfig
+          echo "# CONFIG_ANDROID_PARANOID_NETWORK is not set" >> arch/arm64/configs/vendor/sm8250_defconfig
+
+          #sed -i '/CONFIG_LOCALVERSION/d' arch/arm64/configs/vendor/sm8250_defconfig
+          #echo 'CONFIG_LOCALVERSION="-LXC-KernelSU-support_Pdx"' >> arch/arm64/configs/vendor/sm8250_defconfig
+
+          chmod +x $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/runcpatch.sh
+          if [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/kernel/cgroup/cgroup.c ]; then
+           sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/runcpatch.sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel/kernel/cgroup/cgroup.c
           fi
-          
-          # if [ -f kernel/cgroup/cgroup-v1.c ]; then
-          # patch -p1 < $CONTAINER_PATCHES/cgroup-v1.patch
-          # fi
-          
-          # if [ -f kernel/cgroup/cpuset.c ]; then
-          # patch -p1 < $CONTAINER_PATCHES/cpuset.patch
-          # fi
-          
-          if [ -f net/netfilter/xt_qtaguid.c ]; then
-          patch -p1 < $CONTAINER_PATCHES/xt_qtaguid.patch
+
+          if [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/net/netfilter/xt_qtaguid.c ]; then
+           patch -p0 < $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/xt_qtaguid.patch
           fi
           
       - name: 关闭 Android 网络配置
