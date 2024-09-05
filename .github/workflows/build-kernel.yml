@@ -105,11 +105,11 @@ jobs:
           cd $GITHUB_WORKSPACE/kernel_workspace
           unzip $GITHUB_WORKSPACE/AnyKernel3.zip -d AnyKernel3
           cp android-kernel/out/arch/arm64/boot/Image AnyKernel3
-          zip -r AnyKernel3-RMX3366-KernelSU-${{ env.BUILD_TIME }}.zip AnyKernel3/*
-          rm -rf AnyKernel3/*
+          zip -r AnyKernel3.zip AnyKernel3/*
+          rm -rf AnyKernel3
 
       - name: 发布AnyKernel3卡刷包
         uses: actions/upload-artifact@v3
         with:
           name: AnyKernel3-RMX3366-KernelSU-${{ env.BUILD_TIME }}
-          path: kernel_workspace/AnyKernel3/*
+          path: kernel_workspace/AnyKernel3.zip
