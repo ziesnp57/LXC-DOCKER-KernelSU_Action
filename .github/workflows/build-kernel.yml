@@ -44,31 +44,20 @@ jobs:
          cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
          rm -rf utils
          git clone https://github.com/tomxi1997/lxc-docker-support-for-android.git utils
-         echo 'source "utils/Kconfig"' >> "Kconfig"
-         bash $GITHUB_WORKSPACE/scripts/check-kernel-config/LXC-DOCKER-OPEN-CONFIG.sh arch/arm64/configs/vendor/sm8250_defconfig -w
-         
-         echo "CONFIG_DOCKER=y" >> arch/arm64/configs/vendor/sm8250_defconfig
-         echo "CONFIG_VIRTUALIZATION=y" >> arch/arm64/configs/vendor/sm8250_defconfig
-         echo "CONFIG_VHOST_NET=y" >> arch/arm64/configs/vendor/sm8250_defconfig
-         echo "CONFIG_VHOST_CROSS_ENDIAN_LEGACY=y" >> arch/arm64/configs/vendor/sm8250_defconfig
 
-         echo "CONFIG_NF_NAT_IPV6=y" >> arch/arm64/configs/vendor/sm8250_defconfig
-         echo "CONFIG_IP6_NF_TARGET_MASQUERADE=y" >> arch/arm64/configs/vendor/sm8250_defconfig
-         echo "CONFIG_NETFILTER_XT_TARGET_CHECKSUM=y" >> arch/arm64/configs/vendor/sm8250_defconfig
-         
-         echo "CONFIG_FHANDLE=y" >> arch/arm64/configs/vendor/sm8250_defconfig
-         echo "CONFIG_UNIX_DIAG=y" >> arch/arm64/configs/vendor/sm8250_defconfig
-         echo "CONFIG_PACKET_DIAG=y" >> arch/arm64/configs/vendor/sm8250_defconfig
-         echo "CONFIG_NETLINK_DIAG=y" >> arch/arm64/configs/vendor/sm8250_defconfig
-         
+         sed -i '/CONFIG_ANDROID_PARANOID_NETWORK/d' arch/arm64/configs/vendor/sm8250_defconfig
+         echo "# CONFIG_ANDROID_PARANOID_NETWORK is not set" >> arch/arm64/configs/vendor/sm8250_defconfig
+
+         sed -i '/CONFIG_LOCALVERSION/d' arch/arm64/configs/vendor/sm8250_defconfig
+         echo 'CONFIG_LOCALVERSION="-LXC-KernelSU-kvm-kali"' >> arch/arm64/configs/vendor/sm8250_defconfig
+
          chmod +x $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/runcpatch.sh
-         
          if [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/kernel/cgroup/cgroup.c ]; then
-           sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/runcpatch.sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel/kernel/cgroup/cgroup.c
+         sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/runcpatch.sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel/kernel/cgroup/cgroup.c
          fi
-         
+
          if [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/net/netfilter/xt_qtaguid.c ]; then
-           patch -p0 < $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/xt_qtaguid.patch
+         patch -p0 < $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/xt_qtaguid.patch
          fi
          
       - name: 关闭 Android 网络配置
