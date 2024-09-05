@@ -41,25 +41,35 @@ jobs:
 
       - name: 开启lxc和docker配置
         run: |
+          cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+          bash $GITHUB_WORKSPACE/scripts/check-kernel-config/LXC-DOCKER-OPEN-CONFIG.sh arch/arm64/configs/vendor/sm8250_defconfig -w
+
+      - name: 打入 LXC 补丁
+        run: |
          cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-         rm -rf utils
-         git clone https://github.com/tomxi1997/lxc-docker-support-for-android.git utils
+         export LXC_PATCHES=$GITHUB_WORKSPACE/patches/lxc-docker
+         bash $GITHUB_WORKSPACE/scripts/patch/lxc-docker.sh
 
-         sed -i '/CONFIG_ANDROID_PARANOID_NETWORK/d' arch/arm64/configs/vendor/sm8250_defconfig
-         echo "# CONFIG_ANDROID_PARANOID_NETWORK is not set" >> arch/arm64/configs/vendor/sm8250_defconfig
-
-         sed -i '/CONFIG_LOCALVERSION/d' arch/arm64/configs/vendor/sm8250_defconfig
-         echo 'CONFIG_LOCALVERSION="-LXC-KernelSU-kvm-kali"' >> arch/arm64/configs/vendor/sm8250_defconfig
-
-         chmod +x $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/runcpatch.sh
-         if [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/kernel/cgroup/cgroup.c ]; then
-         sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/runcpatch.sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel/kernel/cgroup/cgroup.c
-         fi
-
-         if [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/net/netfilter/xt_qtaguid.c ]; then
-         patch -p0 < $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/xt_qtaguid.patch
-         fi
-         
+      - name: 打入Android-Container补丁
+        run: |
+          cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+          CONTAINER_PATCHES=$GITHUB_WORKSPACE/patches/Android-Container
+          if [ -f kernel/cgroup/cgroup.c ]; then
+          patch -p1 < $CONTAINER_PATCHES/cgroup.patch
+          fi
+          
+          # if [ -f kernel/cgroup/cgroup-v1.c ]; then
+          # patch -p1 < $CONTAINER_PATCHES/cgroup-v1.patch
+          # fi
+          
+          # if [ -f kernel/cgroup/cpuset.c ]; then
+          # patch -p1 < $CONTAINER_PATCHES/cpuset.patch
+          # fi
+          
+          if [ -f net/netfilter/xt_qtaguid.c ]; then
+          patch -p1 < $CONTAINER_PATCHES/xt_qtaguid.patch
+          fi
+          
       - name: 关闭 Android 网络配置
         run: |
           cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
@@ -68,11 +78,8 @@ jobs:
       - name: 启用 Kali-Nethunter
         run: |
          cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-         nethunter_patches=$GITHUB_WORKSPACE/patches/kali-nethunter-kernel/4.19
-         patch -p1 < $nethunter_patches/add-rtl88xxau-5.6.4.2-drivers.patch
-         patch -p1 < $nethunter_patches/add-wifi-injection-4.14.patch
-         patch -p1 < $nethunter_patches/fix-ath9k-naming-conflict.patch
-         bash $GITHUB_WORKSPACE/scripts/check-kernel-config/Kali-defconfig-checker.sh arch/arm64/configs/sm8250_defconfig -w
+         bash $GITHUB_WORKSPACE/scripts/patch/kali-nethunter-kernel.sh
+         bash $GITHUB_WORKSPACE/scripts/check-kernel-config/Kali-defconfig-checker.sh arch/arm64/configs/vendor/sm8250_defconfig -w
 
     
       - name: 启用 KernelSU
@@ -128,3 +135,4 @@ jobs:
         with:
           name: AnyKernel3-RMX3366-KernelSU-${{ env.BUILD_TIME }}
           path: kernel_workspace/AnyKernel3.zip
+    
