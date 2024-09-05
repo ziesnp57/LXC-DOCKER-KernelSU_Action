@@ -62,7 +62,13 @@ jobs:
 
       - name: 启用 Kali-Nethunter
         run: |
-
+          cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+          git clone https://github.com/tomxi1997/kali-nethunter_patches.git  utils/
+          chmod +x $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/Kali-kernel-Patch.sh
+          #export KV=4.19
+          #export KD=vendor/sm8250_defconfig
+          ./Kali-kernel-Patch.sh
+      
       - name: 启用 KernelSU
         run: |
           cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
