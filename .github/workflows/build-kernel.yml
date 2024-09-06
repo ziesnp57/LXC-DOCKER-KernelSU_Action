@@ -31,6 +31,14 @@ jobs:
           cd $GITHUB_WORKSPACE/kernel_workspace
           git clone https://github.com/ziesnp57/kernel_realme_sm8250 -b bigshot android-kernel --depth=1
 
+#      - name: 开启KVM配置
+#        run: |
+#          cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+#          scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_VIRTUALIZATION
+#          scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_KVM
+#          scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_VHOST_NET
+#          scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_VHOST_CROSS_ENDIAN_LEGACY
+
       - name: 开启lxc和docker配置
         run: |
           cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
@@ -58,6 +66,10 @@ jobs:
             sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/runcpatch.sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel/kernel/cgroup/cgroup.c
           fi
 
+#          if [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/net/netfilter/xt_qtaguid.c ]; then
+#            patch -p0 < $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/xt_qtaguid.patch
+#          fi
+
       - name: 关闭 Android 网络配置
         run: |
           cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
@@ -69,6 +81,11 @@ jobs:
           bash $GITHUB_WORKSPACE/scripts/patch/kali-nethunter-kernel.sh
           bash $GITHUB_WORKSPACE/scripts/check-kernel-config/Kali-defconfig-checker.sh arch/arm64/configs/vendor/sm8250_defconfig -w
 
+#      - name: 启用 KernelSU
+#        run: |
+#          cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+#          curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s v0.9.5
+
       - name: 开启KSU补充内核配置
         run: |
            cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
@@ -79,6 +96,23 @@ jobs:
            scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_UNIX_DIAG
            scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_PACKET_DIAG
            scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_NETLINK_DIAG
+
+
+#          scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_KPROBES
+#          scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_HAVE_KPROBES
+#          scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_KPROBE_EVENTS
+#
+#
+#          scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_OVERLAY_FS
+#
+#
+#          scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --disable CONFIG_LTO
+#          scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --disable CONFIG_LTO_CLANG
+#          scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --disable CONFIG_THINLTO
+#          scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable  CONFIG_LTO_NONE
+#
+#          scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --disable CONFIG_CC_WERROR
+
 
       - name: 设置缓存
         uses: hendrikmuhs/ccache-action@v1.2
