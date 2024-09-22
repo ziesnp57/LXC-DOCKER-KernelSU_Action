@@ -31,55 +31,55 @@ jobs:
           cd $GITHUB_WORKSPACE/kernel_workspace
           git clone https://github.com/ziesnp57/kernel_realme_sm8250 -b bigshot android-kernel --depth=1
 
-      - name: 开启KVM配置
-        run: |
-          cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-          scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_VIRTUALIZATION
-          scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_KVM
-          scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_VHOST_NET
-          scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_VHOST_CROSS_ENDIAN_LEGACY
+      # - name: 开启KVM配置
+      #   run: |
+      #     cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+      #     scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_VIRTUALIZATION
+      #     scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_KVM
+      #     scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_VHOST_NET
+      #     scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_VHOST_CROSS_ENDIAN_LEGACY
 
-      - name: 开启lxc和docker配置
-        run: |
-          cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-          bash $GITHUB_WORKSPACE/scripts/check-kernel-config/LXC-DOCKER-OPEN-CONFIG.sh arch/arm64/configs/vendor/sm8250_defconfig -w
+      # - name: 开启lxc和docker配置
+      #   run: |
+      #     cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+      #     bash $GITHUB_WORKSPACE/scripts/check-kernel-config/LXC-DOCKER-OPEN-CONFIG.sh arch/arm64/configs/vendor/sm8250_defconfig -w
 
-      - name: 打入 LXC 补丁
-        run: |
-          cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-          export LXC_PATCHES=$GITHUB_WORKSPACE/patches/lxc-docker
-          bash $GITHUB_WORKSPACE/scripts/patch/lxc-docker.sh
+      # - name: 打入 LXC 补丁
+      #   run: |
+      #     cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+      #     export LXC_PATCHES=$GITHUB_WORKSPACE/patches/lxc-docker
+      #     bash $GITHUB_WORKSPACE/scripts/patch/lxc-docker.sh
 
-      - name: 打入Android-Container补丁
-        run: |
-          cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-          rm -rf utils
-          git clone https://github.com/tomxi1997/lxc-docker-support-for-android.git utils
-          sed -i '/CONFIG_ANDROID_PARANOID_NETWORK/d' arch/arm64/configs/vendor/sm8250_defconfig
-          echo "# CONFIG_ANDROID_PARANOID_NETWORK is not set" >> arch/arm64/configs/vendor/sm8250_defconfig
+      # - name: 打入Android-Container补丁
+      #   run: |
+      #     cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+      #     rm -rf utils
+      #     git clone https://github.com/tomxi1997/lxc-docker-support-for-android.git utils
+      #     sed -i '/CONFIG_ANDROID_PARANOID_NETWORK/d' arch/arm64/configs/vendor/sm8250_defconfig
+      #     echo "# CONFIG_ANDROID_PARANOID_NETWORK is not set" >> arch/arm64/configs/vendor/sm8250_defconfig
 
-          #sed -i '/CONFIG_LOCALVERSION/d' arch/arm64/configs/vendor/sm8250_defconfig
-          #echo 'CONFIG_LOCALVERSION="-LXC-KernelSU"' >> arch/arm64/configs/vendor/sm8250_defconfig
+      #     #sed -i '/CONFIG_LOCALVERSION/d' arch/arm64/configs/vendor/sm8250_defconfig
+      #     #echo 'CONFIG_LOCALVERSION="-LXC-KernelSU"' >> arch/arm64/configs/vendor/sm8250_defconfig
 
-          chmod +x $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/runcpatch.sh
-          if [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/kernel/cgroup/cgroup.c ]; then
-            sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/runcpatch.sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel/kernel/cgroup/cgroup.c
-          fi
+      #     chmod +x $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/runcpatch.sh
+      #     if [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/kernel/cgroup/cgroup.c ]; then
+      #       sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/runcpatch.sh $GITHUB_WORKSPACE/kernel_workspace/android-kernel/kernel/cgroup/cgroup.c
+      #     fi
 
 #          if [ -f $GITHUB_WORKSPACE/kernel_workspace/android-kernel/net/netfilter/xt_qtaguid.c ]; then
 #            patch -p0 < $GITHUB_WORKSPACE/kernel_workspace/android-kernel/utils/xt_qtaguid.patch
 #          fi
 
-      - name: 关闭 Android 网络配置
-        run: |
-          cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-          scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --disable ANDROID_PARANOID_NETWORK
+      # - name: 关闭 Android 网络配置
+      #   run: |
+      #     cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+      #     scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --disable ANDROID_PARANOID_NETWORK
 
-      - name: 启用 Kali-Nethunter
-        run: |
-          cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-          bash $GITHUB_WORKSPACE/scripts/patch/kali-nethunter-kernel.sh
-          bash $GITHUB_WORKSPACE/scripts/check-kernel-config/Kali-defconfig-checker.sh arch/arm64/configs/vendor/sm8250_defconfig -w
+      # - name: 启用 Kali-Nethunter
+      #   run: |
+      #     cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+      #     bash $GITHUB_WORKSPACE/scripts/patch/kali-nethunter-kernel.sh
+      #     bash $GITHUB_WORKSPACE/scripts/check-kernel-config/Kali-defconfig-checker.sh arch/arm64/configs/vendor/sm8250_defconfig -w
 
       - name: 启用 KernelSU
         run: |
@@ -89,14 +89,6 @@ jobs:
       - name: 开启KSU补充内核配置
         run: |
            cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-           scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_NF_NAT_IPV6
-           scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_IP6_NF_TARGET_MASQUERADE
-           scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_NETFILTER_XT_TARGET_CHECKSUM
-           scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_FHANDLE
-           scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_UNIX_DIAG
-           scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_PACKET_DIAG
-           scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_NETLINK_DIAG
-
 
            scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_KPROBES
            scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_HAVE_KPROBES
@@ -112,6 +104,16 @@ jobs:
            scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable  CONFIG_LTO_NONE
            
            scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --disable CONFIG_CC_WERROR
+
+           
+           
+          #  scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_NF_NAT_IPV6
+          #  scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_IP6_NF_TARGET_MASQUERADE
+          #  scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_NETFILTER_XT_TARGET_CHECKSUM
+          #  scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_FHANDLE
+          #  scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_UNIX_DIAG
+          #  scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_PACKET_DIAG
+          #  scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_NETLINK_DIAG
 
 
       - name: 设置缓存
