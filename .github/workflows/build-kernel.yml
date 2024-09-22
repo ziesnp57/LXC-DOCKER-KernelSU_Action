@@ -90,6 +90,9 @@ jobs:
         run: |
            cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
 
+
+           scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --disable CONFIG_SECURITY_SELINUX
+
            scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_KPROBES
            scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_HAVE_KPROBES
            scripts/config --file arch/arm64/configs/vendor/sm8250_defconfig --enable CONFIG_KPROBE_EVENTS
